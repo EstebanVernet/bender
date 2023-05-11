@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bender</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="icon" type="image/x-icon" href="./favicon.png">
+</head>
+<body>
+    <div id="hexcontent" contenteditable="true"></div>
+    <div id="previewContainer">
+        <div id="preview">
+            <label for="inputFile" class="uploadInput"><img src="img/sel.png">Choose a file</label>
+            <input type="file" id="inputFile" name="upload">
+            <img id="imagePreview" src="" alt="(✖╭╮✖)">
+        </div>
+        <div id="commands">
+            <button id="saveImage"><img src="img/dl.png">Save current image</button>
+            <button id="resetHistory"><img src="img/del.png">Reset history</button>
+            <div class="verticalDivider"></div>
+            <button id="toggleHistory"><img id="toggleImg" src="img/tno.png"><span id="toggleText">Enable manual history</span></button>
+            <button id="addImageToHistory" style="display:none"><img src="img/add.png">Add image to history</button>
+        </div>
+        <div id="history">
+
+        </div>
+    </div>
+    <script src="js/history.js"></script>
+
+    <script src="js/main.js"></script>
+    <script src="js/buttons.js"></script>
+</body>
+</html>
