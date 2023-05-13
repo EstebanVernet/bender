@@ -3,35 +3,36 @@ const historyDom = document.getElementById('history');
 class ImageInstance {
     hex;
     src;
-    diff;
+    diff = [];
     dom;
     history;
 
-    constructor(hex,defaultHex,history) {
+    constructor(hex,history,defaultHex) {
         this.hex = hex;
-        this.history = history;
-        this.compareHex(hex,defaultHex);
+        this.compareHex(hex,history ? history.defaultHex : defaultHex);
         this.build();
-        this.toDom();
+
+        if (history) {
+            this.history = history;
+            this.toDom();
+        }
+
         if (history.active) {
-            this.setContentToEditableDiv(historyDom);
+            this.setContentToEditableDiv(contenteditableDiv);
         }
     }
 
     compareHex(hex,defaultHex) {
         if (hex && defaultHex) {
-            const hexArray = hex.match(/.{1,2}/g);
-            const defaultHexArray = defaultHex.match(/.{1,2}/g);
+            const hexArray = hex.split('');
             const diff = hexArray.filter((byte,index) => {
-                if (byte !== defaultHexArray[index]) {
-                    return {
+                if (byte !== defaultHex[index]) {
+                    this.diff.push({
                         data: byte,
-                        index: index
-                    }
+                        index: Math.floor(index/2)
+                    });
                 }
             });
-
-            this.diff = diff;
         } else {
             console.warn("Hex data not provided for comparing data of an ImageInstance");
         }
@@ -40,7 +41,7 @@ class ImageInstance {
     // Converts hex to imgUrl
     build() {
         if (this.hex) {
-            const hexArray = hex.match(/.{1,2}/g);
+            const hexArray = this.hex.match(/.{1,2}/g);
             const byteArray = hexArray.map(byte => parseInt(byte, 16));
             const blob = new Blob([new Uint8Array(byteArray)], {type: 'image/png'});
             const url = URL.createObjectURL(blob);
@@ -57,26 +58,34 @@ class ImageInstance {
             container.classList.add('history-image-container');
 
             let img = document.createElement('img');
-            this.hexdata = hex;
             img.src = this.src;
             container.appendChild(img);
 
-            img.addEventListener('click', function(event) {
-                previousString = hex;
-                contenteditableDiv.innerText = hex;
+            img.addEventListener('click', () => {
+                previousImage = this;
+                this.setContentToEditableDiv(contenteditableDiv)
                 imagePreview.src = this.src;
             });
             
             let elm = this;
-            let button = document.createElement('button');
-            button.addEventListener('click', function(event) {
-                console.log("ayo")
-                const index = History.list.indexOf(elm);
-                History.remove(index);
+            let btnDelete = document.createElement('button');
+            btnDelete.classList.add('btn-delete');
+            btnDelete.addEventListener('click', () => {
+                const index = this.history.list.indexOf(elm);
+                this.history.remove(index);
             });
-            container.appendChild(button);
+            container.appendChild(btnDelete);
+
+            let btnFavorite = document.createElement('button');
+            btnFavorite.classList.add('btn-favorite');
+            btnFavorite.addEventListener('click', () => {
+                sessionDb.add(this);
+            });
+            container.appendChild(btnFavorite);
 
             this.dom = container;
+
+            historyDom.appendChild(container);
         } else {
             console.warn("Source data not provided for the DomElement creation of the ImageInstance")
         }
@@ -84,19 +93,32 @@ class ImageInstance {
 
     // Appends the hex data to the content editable div
     setContentToEditableDiv(parent) {
-        parent.innerHTML = "";
-        const hexArray = hex.match(/.{1,2}/g);
-        for (let i=0; i<hexArray.length; i++) {
-            let byte = hexArray[i];
+        let start = 0;
+        // Array of hex for each byte
+        let arr = this.hex.match(/.{1,2}/g);
+
+        for (let d of this.diff) {
             let span = document.createElement('span');
-            span.innerText = byte;
-            parent.appendChild(span);
-            for (let d of this.diff) {
-                if (d.index === i) {
-                    span.classList.add('diff');
-                }
-            }
+            span.classList.add('diff');
+            span.innerText = arr[d.index];
+            arr[d.index] = span.outerHTML;
         }
+
+        /*
+        for (let d of this.diff) {
+            let end = d.index;
+            let text = this.hex.substring(start,end);
+            contents.push(text);
+            let span = document.createElement('span');
+            span.classList.add('diff');
+            span.innerText = d.data;
+            contents.push(span.outerHTML);
+            start = end+1;
+        }
+        */
+
+        // contents.push(this.hex.substring(start,this.hex.length));
+        parent.innerHTML = arr.join(' ');
     }
 }
 
@@ -104,18 +126,20 @@ class sessionHistory {
     metatata;
     list = [];
     active;
-    constructor() {
+    defaultHex;
+    constructor(originalContent) {
         this.active = true;
+        this.defaultHex = originalContent;
 
-        document.addEventListener('keydown', function(event) {
-            if (active) {
+        document.addEventListener('keydown', (event) => {
+            if (this.active) {
                 if (event.ctrlKey && event.key === 'z') {
-                    if (this.length > 0) {
-                        const last = this.get(this.length - 2);
-                        previousString = last.hexdata;
-                        contenteditableDiv.innerText = last.hexdata;
-                        imagePreview.src = last.domElement.firstChild.src;
-                        this.remove(this.length - 1);
+                    if (this.len() > 1) {
+                        const prev = this.get(this.len() - 2);
+                        previousImage = prev;
+                        imagePreview.src = prev.src;
+                        prev.setContentToEditableDiv(contenteditableDiv);
+                        this.remove(this.len() - 1);
                     }
                 }
             }
@@ -123,12 +147,12 @@ class sessionHistory {
     }
 
     add(hex) {
-        const img = new historyImage(hex);
+        const img = new ImageInstance(hex,this);
         this.list.push(img);
     }
 
     remove(index) {
-        this.list[index].domElement.remove();
+        this.list[index].dom.remove();
         this.list.splice(index, 1);
     }
 
@@ -136,7 +160,7 @@ class sessionHistory {
         return this.list[index];
     }
 
-    length() {
+    len() {
         return this.list.length;
     }
 
@@ -157,3 +181,54 @@ class sessionHistory {
         historyDom.innerHTML = '';
     }
 }
+
+class sessionDatabase {
+    list = [];
+    highlights = [];
+    constructor() {
+
+    }
+
+    add(instance) {
+        this.list.push(instance);
+    }
+
+    remove(index) {
+        this.list.splice(index, 1);
+    }
+
+    get(index) {
+        return this.list[index];
+    }
+
+    length() {
+        return this.list.length;
+    }
+
+    reset() {
+        this.list = [];
+    }
+
+    addHighlight(instance) {
+        this.highlights.push(instance.diff);
+    }
+
+    export() {
+        let data = [];
+        for (let element of this.list) {
+            data.push({
+                hex: element.hex,
+                diff: element.diff
+            });
+        }
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "data.json");
+        document.body.appendChild(downloadAnchorNode); // required for firefox
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    }
+}
+
+const sessionDb = new sessionDatabase();

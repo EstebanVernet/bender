@@ -33,11 +33,22 @@ body {
 }
 
 #hexcontent {
-    font-family: monospace;
+    padding: 1em;
+    font-size: 1.2em;
     white-space: pre-wrap;
     word-break: break-all;
     word-wrap: break-word;
-    padding: 1em;
+    font-family: monospace;
+    /* set character spacing */
+    letter-spacing: 0.1em;
+}
+
+#hexcontent * {
+    font-family: monospace;
+}
+
+#hexcontent .diff {
+    color: red;
 }
 
 #previewContainer {
@@ -88,11 +99,11 @@ body {
     object-fit: contain;
     cursor: pointer;
     position: relative;
-    transition: padding 150ms, opacity 150ms;
+    transition: transform 150ms, opacity 150ms;
 }
 
 .history-image-container:hover {
-    padding: 5px;
+    transform: scale(0.95);
     outline-offset: -3px;
     opacity: 0.8;
 }
@@ -105,8 +116,6 @@ body {
 
 .history-image-container button {
     position: absolute;
-    top: 2px;
-    right: 3px;
     border: none;
     color: black;
     background: transparent;
@@ -115,12 +124,25 @@ body {
     outline: none;
     width: 30px;
     height: 30px;
-    background-image: url(../img/del.png);
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
     background-size: calc(100% - 5px);
 }
+
+.btn-delete {
+    background-image: url(../img/del.png) !important;
+    top: 2px;
+    right: 3px;
+}
+
+.btn-favorite {
+    background-image: url(../img/dl.png) !important;
+    bottom: 2px;
+    right: 3px;
+}
+
+
 
 .processing {
     color: lightgray;

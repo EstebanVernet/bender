@@ -1,13 +1,21 @@
 const inputFile = document.getElementById('inputFile');
 const imagePreview = document.getElementById('imagePreview');
+const contenteditableDiv = document.getElementById('hexcontent');
 
-const History = new history();
-// const Stream = new stream();
+var histories = [];
+let currentHistory = 0;
+let previousImage;
+
+contenteditableDiv.addEventListener('selectstart', function (e) {
+    e.preventDefault();
+});
+
+function getCurrentHistory() {
+    return histories[currentHistory];
+}
 
 // Import image
 inputFile.addEventListener('change', function(event) {
-    
-    History.reset();
 
     const file = event.target.files[0];
 
@@ -24,56 +32,96 @@ inputFile.addEventListener('change', function(event) {
     readerHex.addEventListener('load', function(event) {
         const buffer = event.target.result;
         const hexString = Array.prototype.map.call(new Uint8Array(buffer), x => ('00' + x.toString(16)).slice(-2)).join('').toUpperCase();
-        document.getElementById('hexcontent').innerHTML = hexString;
-        History.add(hexString);
+        // document.getElementById('hexcontent').innerHTML = hexString;
+        let history = new sessionHistory(hexString);
+        history.add(hexString);
+        previousImage = history.list[0];
+
+        histories.push(history);
+        currentHistory = histories.length - 1;
     });
 });
 
-const contenteditableDiv = document.getElementById('hexcontent');
 contenteditableDiv.addEventListener('keydown', updateCursorPosition);
 
 let isProcessing = false;
 
-let previousString = contenteditableDiv.innerText;
+function documentPositionComparator (a, b) {
+    if (a === b) {
+        return 0;
+    }
+    var position = a.compareDocumentPosition(b);
+    if (position & Node.DOCUMENT_POSITION_FOLLOWING || position & Node.DOCUMENT_POSITION_CONTAINED_BY) {
+        return -1;
+    } else if (position & Node.DOCUMENT_POSITION_PRECEDING || position & Node.DOCUMENT_POSITION_CONTAINS) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+function getCombinedFocusOffset() {
+    const selection = window.getSelection();
+    let combinedOffset = 0;
+    let arr = Array.from(contenteditableDiv.childNodes);
+
+    let found = false;
+    Array.from(arr.sort(documentPositionComparator)).forEach((span) => {
+        if (!found) {
+            if (selection.containsNode(span, true)) {
+                combinedOffset += selection.focusOffset;
+                found = true;
+            } else {
+                combinedOffset += span.textContent.length;
+            }
+        }
+    });
+    return combinedOffset;
+}
 
 function updateCursorPosition(event) {
 
     const selection = window.getSelection();
-    const cursorPosition = selection.focusOffset;
-    const key = event.key.toUpperCase();    // if key are arrows, do nothing
+
+    const cursorPosition = Math.floor((getCombinedFocusOffset()+1)*2/3);
+
+    const key = event.key.toUpperCase();
 
     if (key.startsWith('ARROW')) {
-        console.log('yee')
         return;
     }
 
     event.preventDefault();
 
-    if (/^[0-9A-F]$/.test(key) && cursorPosition != contenteditableDiv.innerText.length) {
+    if (/^[0-9A-F]$/.test(key) && cursorPosition != previousImage.hex.length) {
 
         if (isProcessing) {
             return;
         }
 
-        previousString = contenteditableDiv.innerText;
-
+        if (getCurrentHistory().list.length > 0) {
+            previousImage = getCurrentHistory().list[getCurrentHistory().list.length - 1];
+        }
         setProcess(true);
+
         
-        const currentValue = contenteditableDiv.innerText.toUpperCase();
+        const currentValue = contenteditableDiv.innerText.toUpperCase().replace(/\s/g, '');
         let newValue;
         if (currentValue[cursorPosition]) {
           newValue = currentValue.slice(0, cursorPosition) + key + currentValue.slice(cursorPosition + 1);
         } else {
           newValue = currentValue + key;
         }
-        contenteditableDiv.innerText = newValue;
-
+        // contenteditableDiv.innerText = newValue;
+               
         const hexString = newValue.toUpperCase();
-        imagePreview.src = buildImage(hexString);
 
+        imagePreview.src = buildImage(hexString);
+        
         imagePreview.addEventListener('load', function(event) {
             imagePreview.removeEventListener('load', arguments.callee);
             if (isProcessing) {
+                // console.log("Image loaded")
                 window.setTimeout(function() {
                     verifyImage(true, hexString);
                     placeCursor(cursorPosition);
@@ -81,12 +129,15 @@ function updateCursorPosition(event) {
             }
         });
 
-        imagePreview.addEventListener('error', function(event) {
+        imagePreview.addEventListener('error', async () => {
             imagePreview.removeEventListener('error', arguments.callee);
             if (isProcessing) {
-                contenteditableDiv.innerText = previousString;
-                imagePreview.src = buildImage(previousString);
-                verifyImage(false);
+                setProcess(false);
+                // console.warn("Error loading image")
+
+                imagePreview.src = previousImage.src;
+                // verifyImage(false);
+                previousImage.setContentToEditableDiv(contenteditableDiv);
                 placeCursor(cursorPosition);
             }
         });
@@ -95,13 +146,28 @@ function updateCursorPosition(event) {
 
 function placeCursor(cursorPosition) {
     // Update the cursor position to be after the inserted/replaced character
-    const newCursorPosition = cursorPosition + 1;
-    const range = document.createRange();
-    const sel = window.getSelection();
-    range.setStart(contenteditableDiv.firstChild, newCursorPosition);
-    range.collapse(true);
-    sel.removeAllRanges();
-    sel.addRange(range);
+    // For each elements of the contenteditable div, counts its length and sum them until we reach the cursor position, then place the cursor at the remaining offset
+    let offset = 0;
+    let found = false;
+    Array.from(contenteditableDiv.childNodes).forEach((span) => {
+        if (!found) {
+            if (offset + span.textContent.length >= cursorPosition) {
+                const range = document.createRange();
+                const sel = window.getSelection();
+                // set start to node next to the span
+                range.setStartAfter(span);
+                
+                range.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(range);
+                found = true;
+            } else {
+                offset += span.textContent.length;
+            }
+        }
+    }
+    );
+
 }
 
 function buildImage(hex) {
@@ -112,16 +178,15 @@ function buildImage(hex) {
     return url;
 }
 
-
-function verifyImage(allowHistory, hexString) {
-    // console.log(imagePreview.offsetWidth, imagePreview.offsetHeight)
-    
+function verifyImage(allowHistory, hexString) {    
     if (imagePreview.offsetWidth < 100 || imagePreview.offsetHeight < 35) {
-        contenteditableDiv.innerText = previousString;
-        imagePreview.src = buildImage(previousString);  
+        previousImage.setContentToEditableDiv(contenteditableDiv);
     } else {
         if (allowHistory && isHistoryAutmoatic) {
-            History.add(hexString);
+            getCurrentHistory().add(hexString);
+        } else {
+            previousImage = new ImageInstance(hexString,false,getCurrentHistory().defaultHex);
+            previousImage.setContentToEditableDiv(contenteditableDiv);
         }
     }
     setProcess(false);
@@ -134,7 +199,7 @@ function setProcess(bool) {
         contenteditableDiv.classList.add('processing');
     } else {
         contenteditableDiv.classList.remove('processing');
-        Stream.appendImage(imagePreview.src)
+        // Stream.appendImage(imagePreview.src)
     }
 }
 

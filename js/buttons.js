@@ -19,7 +19,7 @@ saveButton.addEventListener('click', function(event) {
 });
 
 resetHistoryButton.addEventListener('click', function(event) {
-    History.reset();
+    getCurrentHistory().reset();
 });
 
 let isHistoryAutmoatic = true;
@@ -35,6 +35,6 @@ toggleHistoryButton.addEventListener('click', function(event) {
 });
 
 addImageToHistoryButton.addEventListener('click', function(event) {
-    const hex = contenteditableDiv.innerText.toUpperCase();
-    History.add(hex);
+    const hex = contenteditableDiv.innerText.toUpperCase().replace(/\s/g, '');
+    getCurrentHistory().add(hex);
 });

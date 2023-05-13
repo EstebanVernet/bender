@@ -66,7 +66,6 @@ class historyImage {
         let elm = this;
         let button = document.createElement('button');
         button.addEventListener('click', function(event) {
-            console.log("ayo")
             const index = History.list.indexOf(elm);
             History.remove(index);
         });
