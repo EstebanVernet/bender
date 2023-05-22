@@ -25,14 +25,14 @@ class ImageInstance {
     compareHex(hex,defaultHex) {
         if (hex && defaultHex) {
             const hexArray = hex.split('');
-            const diff = hexArray.filter((byte,index) => {
-                if (byte !== defaultHex[index]) {
+            for (let i=0 ; i<hexArray.length ; i++) {
+                if (hexArray[i] != defaultHex[i]) {
                     this.diff.push({
-                        data: byte,
-                        index: Math.floor(index)
+                        data: hexArray[i],
+                        index: i
                     });
                 }
-            });
+            }
         } else {
             console.warn("Hex data not provided for comparing data of an ImageInstance");
         }
@@ -99,23 +99,23 @@ class ImageInstance {
 
         let highlight = document.createElement('div');
         highlight.classList.add('highlight');
-
+        highlight.spellcheck = false;
         if (this.diff.length > 0) {
             let coords = [];
             for (let i of this.diff) {
                 coords.push(i.index);
             }
+            console.log("Coords:",coords)
             coords = coords.sort((a, b) => a - b);
             
             let oldIndex = 0;
             for (let i=0 ; i<coords.length ; i++) {
                 let coord = coords[i];
                 let count = coord-oldIndex
-                if (count > 0) highlight.innerHTML += '&nbsp;'.repeat(count);
-                oldIndex = coord+1;
+                highlight.innerHTML += '\u200A'.repeat(i==0 ? count : count-1);
+                oldIndex = coord;
                 highlight.innerHTML += arr[coord];
             };
-            highlight.innerHTML += '&nbsp;'.repeat(arr.length-oldIndex);
         }
         
         parent.appendChild(highlight);

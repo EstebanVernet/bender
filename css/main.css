@@ -65,9 +65,10 @@ body {
     padding:15px;
     top:0;
     left:0;
+    word-break: break-all;
+    word-wrap: break-word;
+    white-space: pre-wrap;
 }
-
-
 
 #previewContainer {
     display: flex;
