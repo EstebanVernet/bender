@@ -3,6 +3,11 @@
     src: url("../fonts/SourceCodePro-Regular.ttf");
 }
 
+@font-face {
+    font-family: "sc-bold";
+    src: url("../fonts/SourceCodePro-Bold.ttf");
+}
+
 * {
     font-family: "sc-regular";
     box-sizing: border-box;
@@ -33,23 +38,36 @@ body {
 }
 
 #hexcontent {
-    padding: 1em;
-    font-size: 1.2em;
+    padding: 15px;
+    font-size: 16px;
     white-space: pre-wrap;
     word-break: break-all;
     word-wrap: break-word;
     font-family: monospace;
     /* set character spacing */
-    letter-spacing: 0.1em;
+    letter-spacing: 2px;
+    position: relative;
+    color: #555555;
 }
 
 #hexcontent * {
     font-family: monospace;
 }
 
-#hexcontent .diff {
+#hexcontent .highlight {
+    /* Set its width and height to a single character */
+    position: absolute;
     color: red;
+    user-select: none;
+    pointer-events: none;
+    width: 100%;
+    height: 100%;
+    padding:15px;
+    top:0;
+    left:0;
 }
+
+
 
 #previewContainer {
     display: flex;
@@ -100,6 +118,8 @@ body {
     cursor: pointer;
     position: relative;
     transition: transform 150ms, opacity 150ms;
+    background: url(../img/bck.png) ;
+    border: solid 2px black;
 }
 
 .history-image-container:hover {
@@ -145,7 +165,7 @@ body {
 
 
 .processing {
-    color: lightgray;
+    color: #AAAAAA !important;
 }
 
 #commands {
@@ -201,3 +221,4 @@ video {
     height:400px;
     position: absolute;
 }
+

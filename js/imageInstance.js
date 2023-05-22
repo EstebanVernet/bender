@@ -29,7 +29,7 @@ class ImageInstance {
                 if (byte !== defaultHex[index]) {
                     this.diff.push({
                         data: byte,
-                        index: Math.floor(index/2)
+                        index: Math.floor(index)
                     });
                 }
             });
@@ -93,32 +93,32 @@ class ImageInstance {
 
     // Appends the hex data to the content editable div
     setContentToEditableDiv(parent) {
-        let start = 0;
-        // Array of hex for each byte
-        let arr = this.hex.match(/.{1,2}/g);
+        let arr = this.hex.split('');
 
-        for (let d of this.diff) {
-            let span = document.createElement('span');
-            span.classList.add('diff');
-            span.innerText = arr[d.index];
-            arr[d.index] = span.outerHTML;
+        parent.innerHTML = this.hex;
+
+        let highlight = document.createElement('div');
+        highlight.classList.add('highlight');
+
+        if (this.diff.length > 0) {
+            let coords = [];
+            for (let i of this.diff) {
+                coords.push(i.index);
+            }
+            coords = coords.sort((a, b) => a - b);
+            
+            let oldIndex = 0;
+            for (let i=0 ; i<coords.length ; i++) {
+                let coord = coords[i];
+                let count = coord-oldIndex
+                if (count > 0) highlight.innerHTML += '&nbsp;'.repeat(count);
+                oldIndex = coord+1;
+                highlight.innerHTML += arr[coord];
+            };
+            highlight.innerHTML += '&nbsp;'.repeat(arr.length-oldIndex);
         }
-
-        /*
-        for (let d of this.diff) {
-            let end = d.index;
-            let text = this.hex.substring(start,end);
-            contents.push(text);
-            let span = document.createElement('span');
-            span.classList.add('diff');
-            span.innerText = d.data;
-            contents.push(span.outerHTML);
-            start = end+1;
-        }
-        */
-
-        // contents.push(this.hex.substring(start,this.hex.length));
-        parent.innerHTML = arr.join(' ');
+        
+        parent.appendChild(highlight);
     }
 }
 
