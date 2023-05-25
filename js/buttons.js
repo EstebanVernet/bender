@@ -19,13 +19,21 @@ saveButton.addEventListener('click', function(event) {
 });
 
 resetHistoryButton.addEventListener('click', function(event) {
-    getCurrentHistory().reset();
+    Toast.show('Are you sure you want to reset the session?', {
+        text: 'Yes',
+        callback: () => {
+            getCurrentHistory().reset();
+        }
+    }, {
+        text: 'No',
+        callback: () => {
+        }
+    });
 });
 
 let isHistoryAutmoatic = true;
 toggleHistoryButton.addEventListener('click', function(event) {
     isHistoryAutmoatic = !isHistoryAutmoatic;
-    document.getElementById("toggleText").innerText = isHistoryAutmoatic ? 'Enable manual history' : 'Disable manual history';
     document.getElementById("toggleImg").src = isHistoryAutmoatic ? 'img/tno.png' : 'img/tyes.png';
     if (isHistoryAutmoatic) {
         addImageToHistoryButton.style.display = 'none';

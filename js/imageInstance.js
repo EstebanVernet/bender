@@ -5,7 +5,9 @@ class ImageInstance {
     src;
     diff = [];
     dom;
+    buttons;
     history;
+    favorited;
 
     constructor(hex,history,defaultHex) {
         this.hex = hex;
@@ -67,6 +69,7 @@ class ImageInstance {
                 imagePreview.src = this.src;
             });
             
+            /*
             let elm = this;
             let btnDelete = document.createElement('button');
             btnDelete.classList.add('btn-delete');
@@ -82,13 +85,69 @@ class ImageInstance {
                 sessionDb.add(this);
             });
             container.appendChild(btnFavorite);
+            */
 
+            this.buttons = document.createElement('div');
+            this.buttons.classList.add('buttons');
+            container.appendChild(this.buttons);
             this.dom = container;
+
+            this.addButton('delete', (btn) => {
+                if (this.favorited) {
+                    sessionDb.remove(this);
+                }
+                const index = this.history.list.indexOf(this);
+                this.history.remove(index);
+            });
+
+            this.addButton('fav0', (btn) => {
+                this.favorited = !this.favorited;
+                if (this.favorited) {
+                    sessionDb.remove(this);
+                    btn.getElementsByTagName('img')[0].src = 'img/icons/fav1.png';
+                } else {
+                    sessionDb.add(this);
+                    btn.getElementsByTagName('img')[0].src = 'img/icons/fav0.png';
+                }
+            });
+
+            this.addButton('target', (btn) => {
+                this.history.targetDiff = this.diff;
+                // Get the current selected image
+                previousImage.setContentToEditableDiv(contenteditableDiv);
+
+                Toast.show('Data targeted. Do you also want to set your current data to the original image ?', {
+                    text: 'Yes',
+                    callback: () => {
+                        this.history.list[0].setContentToEditableDiv(contenteditableDiv);
+                        imagePreview.src = this.history.list[0].src;
+                    }
+                }, {
+                    text: 'No',
+                    callback: () => {
+                    }
+                });
+            });
+
 
             historyDom.appendChild(container);
         } else {
             console.warn("Source data not provided for the DomElement creation of the ImageInstance")
         }
+    }
+
+    addButton(icon,f) {
+        let btn = document.createElement('button');
+        btn.classList.add('btn');
+        
+        let img = document.createElement('img');
+        img.src = 'img/icons/'+icon+'.png';
+        btn.appendChild(img);
+        // event listener click with function f and the button as parameter
+        btn.addEventListener('click', () => {
+            f(btn);
+        });
+        this.buttons.appendChild(btn);
     }
 
     // Appends the hex data to the content editable div
@@ -100,12 +159,12 @@ class ImageInstance {
         let highlight = document.createElement('div');
         highlight.classList.add('highlight');
         highlight.spellcheck = false;
+
         if (this.diff.length > 0) {
             let coords = [];
             for (let i of this.diff) {
                 coords.push(i.index);
             }
-            console.log("Coords:",coords)
             coords = coords.sort((a, b) => a - b);
             
             let oldIndex = 0;
@@ -117,8 +176,31 @@ class ImageInstance {
                 highlight.innerHTML += arr[coord];
             };
         }
+
+        let targetHighlight = document.createElement('div');
+        targetHighlight.classList.add('targetHighlight');
+        targetHighlight.spellcheck = false;
+        if (this.history) {
+            if (this.history.targetDiff) {
+                let coords = [];
+                for (let i of this.history.targetDiff) {
+                    coords.push(i.index);
+                }
+                coords = coords.sort((a, b) => a - b);
+                
+                let oldIndex = 0;
+                for (let i=0 ; i<coords.length ; i++) {
+                    let coord = coords[i];
+                    let count = coord-oldIndex
+                    targetHighlight.innerHTML += '\u200A'.repeat(i==0 ? count : count-1);
+                    oldIndex = coord;
+                    targetHighlight.innerHTML += arr[coord];
+                };
+            };
+        };
         
         parent.appendChild(highlight);
+        parent.appendChild(targetHighlight);
     }
 }
 
@@ -127,6 +209,7 @@ class sessionHistory {
     list = [];
     active;
     defaultHex;
+    targetDiff;
     constructor(originalContent) {
         this.active = true;
         this.defaultHex = originalContent;
@@ -165,8 +248,10 @@ class sessionHistory {
     }
 
     reset() {
-        this.list = [];
+        this.list = [this.list[0]];
         historyDom.innerHTML = '';
+        this.add(this.defaultHex);
+        imagePreview.src = this.list[0].src;
     }
 
     open() {
@@ -193,7 +278,8 @@ class sessionDatabase {
         this.list.push(instance);
     }
 
-    remove(index) {
+    remove(element) {
+        const index = this.list.indexOf(element);
         this.list.splice(index, 1);
     }
 

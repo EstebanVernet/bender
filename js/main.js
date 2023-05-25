@@ -12,6 +12,8 @@ contenteditableDiv.addEventListener('selectstart', function (e) {
 });
 */
 
+let Toast = new toast();
+
 function getCurrentHistory() {
     return histories[currentHistory];
 }

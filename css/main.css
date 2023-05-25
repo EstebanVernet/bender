@@ -20,6 +20,7 @@ html, body {
     padding: 0;
     margin: 0;
     background-color: lightgray;
+    overflow: hidden;
 }
 
 body {
@@ -47,17 +48,17 @@ body {
     /* set character spacing */
     letter-spacing: 2px;
     position: relative;
-    color: #555555;
+    color: #111111;
+    background-color: darkgray;
 }
 
 #hexcontent * {
     font-family: monospace;
 }
 
-#hexcontent .highlight {
+.highlight, .targetHighlight {
     /* Set its width and height to a single character */
     position: absolute;
-    color: red;
     user-select: none;
     pointer-events: none;
     width: 100%;
@@ -69,6 +70,16 @@ body {
     word-wrap: break-word;
     white-space: pre-wrap;
 }
+
+.highlight {
+    color: red;
+    z-index: 1;
+}
+
+.targetHighlight {
+    color: lime;
+}
+
 
 #previewContainer {
     display: flex;
@@ -135,16 +146,39 @@ body {
     object-fit: contain;
 }
 
-.history-image-container button {
+.buttons {
     position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    background-color: white;
+    padding:2px;
+    height: 15%;
+}
+
+.btn {
+    width:fit-content;
+}
+
+.btn img {
+    height: 100%;
+    width: auto;
+    padding: 0 5px;
+    cursor: pointer;
+    transition: transform 150ms;
+}
+
+.history-image-container button {
     border: none;
     color: black;
     background: transparent;
     font-size: 1em;
     cursor: pointer;
     outline: none;
-    width: 30px;
-    height: 30px;
+    height: 100%;
+    aspect-ratio: 1/1;
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
@@ -223,3 +257,50 @@ video {
     position: absolute;
 }
 
+
+/* Toast */
+
+#toast {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom:0;
+    width: 60%;
+    height: 200px;
+    background-color: lightgray;
+    border-radius: 10px 10px 0 0;
+    border: solid 2px black;
+    border-bottom: none;
+    transition: bottom 300ms;
+    z-index: 1000;
+}
+
+.toast_hidden {
+    bottom:-200px !important;
+}
+
+#toast-text {
+    padding: 15px;
+    width: 100%;
+    height: 120px;
+    position: absolute;
+    top: 0;
+}
+
+#toast-buttons {
+    padding: 15px;
+    width: 100%;
+    height: 80px;
+    position: absolute;
+    bottom: 0;
+
+    display: flex;
+    justify-content:center;
+    gap:5px;
+}
+
+#toast-buttons button {
+    border: none;
+    padding: 20px;
+    font-size: 16px;
+}
