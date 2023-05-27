@@ -118,7 +118,7 @@ function updateCursorPosition(event) {
             if (isProcessing) {
                 window.setTimeout(function() {
                     verifyImage(true, hexString);
-                    placeCursor(cursorPosition);
+                    placeCursor(cursorPosition+1);
                 }, 50);
             }
         });
@@ -180,8 +180,31 @@ function setProcess(bool) {
 }
 
 // Allow horizontal scroll for #history
-
 historyDom.addEventListener('wheel', function(event) {
+    /* Disable when trackpad is used */
+    if (event.deltaX != 0) {
+        return;
+    }
     event.preventDefault();
     historyDom.scrollLeft += event.deltaY;
+});
+
+// Navigate through images in current history using arrow keys, if not focused on contenteditableDiv
+document.addEventListener('keydown', function(event) {
+    if (event.target.id != 'hexcontent') {
+        const index = getCurrentHistory().list.indexOf(previousImage);
+        if (event.key == 'ArrowLeft') {
+            if (index > 0) {
+                previousImage = getCurrentHistory().list[index - 1];
+                previousImage.setContentToEditableDiv(contenteditableDiv);
+                imagePreview.src = previousImage.src;
+            }
+        } else if (event.key == 'ArrowRight') {
+            if (index < getCurrentHistory().list.length - 1) {
+                previousImage = getCurrentHistory().list[index + 1];
+                previousImage.setContentToEditableDiv(contenteditableDiv);
+                imagePreview.src = previousImage.src;
+            }
+        }
+    }
 });

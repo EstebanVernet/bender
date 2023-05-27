@@ -1,6 +1,8 @@
 const saveButton = document.getElementById('saveImage'),
 resetHistoryButton = document.getElementById('resetHistory'),
+resetImageButton = document.getElementById('resetImage'),
 toggleHistoryButton = document.getElementById('toggleHistory'),
+undoButton = document.getElementById('undo'),
 addImageToHistoryButton = document.getElementById('addImageToHistory');
 
 saveButton.addEventListener('click', function(event) {
@@ -31,6 +33,12 @@ resetHistoryButton.addEventListener('click', function(event) {
     });
 });
 
+resetImageButton.addEventListener('click', function(event) {
+    let defaultImage = getCurrentHistory().list[0];
+    imagePreview.src = defaultImage.src; 
+    defaultImage.setContentToEditableDiv(contenteditableDiv);
+});
+
 let isHistoryAutmoatic = true;
 toggleHistoryButton.addEventListener('click', function(event) {
     isHistoryAutmoatic = !isHistoryAutmoatic;
@@ -45,4 +53,15 @@ toggleHistoryButton.addEventListener('click', function(event) {
 addImageToHistoryButton.addEventListener('click', function(event) {
     const hex = contenteditableDiv.innerText.toUpperCase().replace(/\s/g, '');
     getCurrentHistory().add(hex);
+});
+
+undoButton.addEventListener('click', function(event) {
+    let hist = getCurrentHistory()
+    if (hist.len() > 1) {
+        const prev = hist.get(hist.len() - 2);
+        previousImage = prev;
+        imagePreview.src = prev.src;
+        prev.setContentToEditableDiv(contenteditableDiv);
+        hist.remove(hist.len() - 1);
+    }
 });

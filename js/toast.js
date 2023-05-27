@@ -15,7 +15,7 @@ class toast {
                 let txt = action.text;
                 let callback = action.callback;
                 let button = document.createElement('button');
-                button.innerText = `(CTRL+${actions.indexOf(action)+1}) ${txt}`;
+                button.innerText = `(CTRL+ALT+${actions.indexOf(action)+1}) ${txt}`;
                 button.addEventListener('click', () => {
                     this.hide();
                     callback();
@@ -30,6 +30,7 @@ class toast {
 
             let toastEvent = (event) => {
                 if (!event.ctrlKey) return;
+                if (!event.altKey) return;
                 if (event.key > 0 && event.key <= actions.length) {
                     let button = this.domButtons.getElementsByTagName('button')[event.key-1];
                     button.click();

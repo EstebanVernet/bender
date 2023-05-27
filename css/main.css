@@ -77,7 +77,7 @@ body {
 }
 
 .targetHighlight {
-    color: lime;
+    text-shadow: #00FF00 0px 0px 5px;
 }
 
 

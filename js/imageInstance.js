@@ -64,6 +64,7 @@ class ImageInstance {
             container.appendChild(img);
 
             img.addEventListener('click', () => {
+                console.log("Clicked on image")
                 previousImage = this;
                 this.setContentToEditableDiv(contenteditableDiv)
                 imagePreview.src = this.src;
@@ -100,6 +101,7 @@ class ImageInstance {
                 this.history.remove(index);
             });
 
+            /*
             this.addButton('fav0', (btn) => {
                 this.favorited = !this.favorited;
                 if (this.favorited) {
@@ -110,7 +112,8 @@ class ImageInstance {
                     btn.getElementsByTagName('img')[0].src = 'img/icons/fav0.png';
                 }
             });
-
+            */
+           
             this.addButton('target', (btn) => {
                 this.history.targetDiff = this.diff;
                 // Get the current selected image
@@ -119,6 +122,7 @@ class ImageInstance {
                 Toast.show('Data targeted. Do you also want to set your current data to the original image ?', {
                     text: 'Yes',
                     callback: () => {
+                        // Get the current selected image                        
                         this.history.list[0].setContentToEditableDiv(contenteditableDiv);
                         imagePreview.src = this.history.list[0].src;
                     }
@@ -152,6 +156,7 @@ class ImageInstance {
 
     // Appends the hex data to the content editable div
     setContentToEditableDiv(parent) {
+        previousImage = this;
         let arr = this.hex.split('');
 
         parent.innerHTML = this.hex;
